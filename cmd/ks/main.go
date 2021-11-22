@@ -131,8 +131,7 @@ func tmuxSplit(path string) {
 	tmuxSendToPane(paneIndex, fmt.Sprintf("export KUBECONFIG=%s", path))
 
 	// this is a bradford special.. should it really be here?
-	tmuxSendToPane(paneIndex, "kinit")
-	tmuxSendToPane(paneIndex, "k9a")
+	tmuxSendToPane(paneIndex, "kcompletion")
 }
 
 func tmuxSendToPane(paneIndex, command string)  {
