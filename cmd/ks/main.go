@@ -9,19 +9,20 @@ package main
 
 import (
 	"fmt"
-	"github.com/atotto/clipboard"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/atotto/clipboard"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 var (
 	setEnv bool // global flag to tell if we are using KUBECONFIG
-	tmux bool
+	tmux   bool
 )
 
 var rootCmd = &cobra.Command{
@@ -36,6 +37,21 @@ var localCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		execute(true, args)
+	},
+}
+
+var infoCmd = &cobra.Command{
+	Use:   "info",
+	Short: "display info about the current context",
+	Run: func(cmd *cobra.Command, args []string) {
+		kubeConfigPath := fmt.Sprintf("%s/config", extractKubeDir())
+		if kubectx := os.Getenv("KUBECONFIG"); kubectx != "" {
+			split := strings.Split(kubectx, "/")
+			logrus.Infof("config_override=%s", split[len(split)-1])
+		} else if readlink, err := os.Readlink(kubeConfigPath); err == nil {
+			split := strings.Split(readlink, "/")
+			logrus.Infof("config_file=%s", split[len(split)-1])
+		}
 	},
 }
 
@@ -60,7 +76,7 @@ var kubeCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(localCmd, kubeCmd)
+	rootCmd.AddCommand(localCmd, kubeCmd, infoCmd)
 	rootCmd.PersistentFlags().BoolVarP(&setEnv, "setenv", "s", false, "copies export KUBECONTEXT")
 	rootCmd.PersistentFlags().BoolVarP(&tmux, "tmux", "t", false, "executes export KUBECONTEXT in a new tmux pane")
 }
@@ -97,22 +113,20 @@ func execute(isLocal bool, args []string) {
 
 		if tmux {
 			tmuxSplit(filePath)
-		}
-
-		if setEnv {
+		} else if setEnv {
 			if err := execKubeContextCommand(filePath); err != nil {
 				logrus.WithError(err).Fatal("could not copy export command")
 			} else {
 				logrus.Info("copied kubeconfig command to clipboard, paste when ready")
 				os.Exit(0)
 			}
-		}
-
-		// link .kube file with filePath
-		kubeConfigPath := fmt.Sprintf("%s/config", extractKubeDir())
-		_ = os.RemoveAll(kubeConfigPath) // we don't care if this file exists or not
-		if err := os.Symlink(filePath, kubeConfigPath); err != nil {
-			logrus.WithError(err).Fatal("could not link configurations")
+		} else {
+			// link .kube file with filePath
+			kubeConfigPath := fmt.Sprintf("%s/config", extractKubeDir())
+			_ = os.RemoveAll(kubeConfigPath) // we don't care if this file exists or not
+			if err := os.Symlink(filePath, kubeConfigPath); err != nil {
+				logrus.WithError(err).Fatal("could not link configurations")
+			}
 		}
 	}
 }
@@ -129,12 +143,9 @@ func tmuxSplit(path string) {
 	paneIndex := strings.TrimSpace(string(output))
 
 	tmuxSendToPane(paneIndex, fmt.Sprintf("export KUBECONFIG=%s", path))
-
-	// this is a bradford special.. should it really be here?
-	tmuxSendToPane(paneIndex, "kcompletion")
 }
 
-func tmuxSendToPane(paneIndex, command string)  {
+func tmuxSendToPane(paneIndex, command string) {
 	setKubeConfig := exec.Command("tmux", "send", "-t", paneIndex, command, "ENTER")
 	_ = setKubeConfig.Start()
 }
