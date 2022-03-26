@@ -44,6 +44,8 @@ spec:
             value: ./cmd/ks
           - name: runtime_platforms
             value: "{{ item.runtime_platforms }}"
+          - name: tag_suffix
+            value: "-{{ item.platform }}"
         templateRef:
           name: flavor-go-template
           template: "{{inputs.parameters.git_ref_type}}"
