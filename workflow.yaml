@@ -3,6 +3,8 @@ kind: Workflow
 metadata:
   generateName: ks-image-
 spec:
+  podGC:
+    strategy: OnPodSuccess # delete pods when workflow is successful
   entrypoint: main
   arguments:
     parameters:
