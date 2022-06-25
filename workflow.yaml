@@ -22,7 +22,7 @@ spec:
       - name: upstream_repo
         value: quay.io/bradfordwagner/go-builder
       - name: upstream_tag
-        value: 2.2.0
+        value: 2.3.0
     dag:
       tasks:
       - name: go-builder
@@ -50,5 +50,6 @@ spec:
           name: flavor-go-template
           template: "{{inputs.parameters.git_ref_type}}"
         withItems:
-        - { platform: alpine_3.14     , runtime_platforms: [linux/arm64] }
+        - { platform: alpine_3.14     , runtime_platforms: [linux/amd64] }
+
 
