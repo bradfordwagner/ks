@@ -9,7 +9,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -60,14 +60,13 @@ var kubeCmd = &cobra.Command{
 	Short: "sets a file from ~/.kube to be kubecontext",
 	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		kubeDirPattern := extractKubeDir()
-		files, err := ioutil.ReadDir(kubeDirPattern)
-		if err != nil {
-			logrus.WithError(err).Fatal()
-		}
+
 		filesInKubeDir := []string{}
-		for _, file := range files {
-			filesInKubeDir = append(filesInKubeDir, file.Name())
-		}
+		filepath.Walk(kubeDirPattern, func(path string, info fs.FileInfo, err error) error {
+			filesInKubeDir = append(filesInKubeDir, path)
+			return nil
+		})
+
 		return filesInKubeDir, cobra.ShellCompDirectiveDefault
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -105,9 +104,6 @@ func execute(isLocal bool, args []string) {
 			} else {
 				filePath = p
 			}
-		} else {
-			// use ~/.kube/... path for kube verb
-			filePath = fmt.Sprintf("%s/%s", extractKubeDir(), filePath)
 		}
 		logrus.Infof("context file=%s", filePath)
 
