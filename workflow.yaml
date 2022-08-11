@@ -17,8 +17,6 @@ spec:
       parameters:
       - name: git_ref_type
       - name: git_version
-      - name: repo_name
-        value: quay.io/bradfordwagner/ks
       - name: upstream_repo
         value: quay.io/bradfordwagner/go-builder
       - name: upstream_tag
@@ -36,19 +34,18 @@ spec:
             value: "{{ inputs.parameters.upstream_repo }}"
           - name: upstream_tag
             value: "{{ inputs.parameters.upstream_tag }}"
-          - name: repo_name
-            value: "{{ inputs.parameters.repo_name }}"
           - name: platform
             value: "{{ item.platform }}"
-          - name: go_main_path
-            value: ./cmd/ks
-          - name: runtime_platforms
-            value: "{{ item.runtime_platforms }}"
-          - name: tag_suffix
-            value: "-{{ item.platform }}"
+          - name: vault_secrets_enabled
+            value: true
+          - name: vault_role
+            value: go_releaser_reader
+          - name: vault_env_secrets_paths
+            value: |
+              ["secret/go_releaser"]
         templateRef:
           name: flavor-go-template
           template: "{{inputs.parameters.git_ref_type}}"
         withItems:
-        - { platform: alpine_3.16, runtime_platforms: [linux/arm64] }
+        - { platform: alpine_3.16 }
 
