@@ -62,8 +62,24 @@ var kubeCmd = &cobra.Command{
 		kubeDirPattern := extractKubeDir()
 
 		filesInKubeDir := []string{}
+		ignorePaths := map[string]bool{
+			"cache/discovery": true,
+			"cache/http":      true,
+			"http-cache":      true,
+			"switch-state":    true,
+			"kubens":          true,
+		}
 		filepath.Walk(kubeDirPattern, func(path string, info fs.FileInfo, err error) error {
-			filesInKubeDir = append(filesInKubeDir, path)
+			var shouldIgnore bool
+			for ignorePath, _ := range ignorePaths {
+				if strings.Contains(path, ignorePath) {
+					shouldIgnore = true
+					break
+				}
+			}
+			if !shouldIgnore {
+				filesInKubeDir = append(filesInKubeDir, path)
+			}
 			return nil
 		})
 
