@@ -139,6 +139,9 @@ func execute(isLocal bool, args []string) {
 			if err := os.Symlink(filePath, kubeConfigPath); err != nil {
 				logrus.WithError(err).Fatal("could not link configurations")
 			}
+			if err := os.Chmod(kubeConfigPath, 0500); err != nil {
+				logrus.WithError(err).Fatal("could mod configurations")
+			}
 		}
 	}
 }
