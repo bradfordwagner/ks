@@ -22,6 +22,7 @@ import (
 
 var (
 	setEnv bool // global flag to tell if we are using KUBECONFIG
+	pipe   bool // global flag to tell if we are using KUBECONFIG
 	tmux   bool
 )
 
@@ -93,6 +94,7 @@ var kubeCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(localCmd, kubeCmd, infoCmd)
 	rootCmd.PersistentFlags().BoolVarP(&setEnv, "setenv", "s", false, "copies export KUBECONTEXT")
+	rootCmd.PersistentFlags().BoolVarP(&pipe, "pipe", "p", false, "outputs to stdout for use with pipe commands")
 	rootCmd.PersistentFlags().BoolVarP(&tmux, "tmux", "t", false, "executes export KUBECONTEXT in a new tmux pane")
 }
 
@@ -125,6 +127,9 @@ func execute(isLocal bool, args []string) {
 
 		if tmux {
 			tmuxSplit(filePath)
+		} else if pipe {
+			exportCommand := getKubeExportCommand(filePath)
+			_, _ = os.Stdout.Write([]byte(exportCommand))
 		} else if setEnv {
 			if err := execKubeContextCommand(filePath); err != nil {
 				logrus.WithError(err).Fatal("could not copy export command")
@@ -165,9 +170,12 @@ func tmuxSendToPane(paneIndex, command string) {
 	_ = setKubeConfig.Start()
 }
 
+func getKubeExportCommand(filePath string) string {
+	return fmt.Sprintf("export KUBECONFIG=%s", filePath)
+}
+
 func execKubeContextCommand(filePath string) (err error) {
-	copyText := fmt.Sprintf("export KUBECONFIG=%s", filePath)
-	return clipboard.WriteAll(copyText)
+	return clipboard.WriteAll(getKubeExportCommand(filePath))
 }
 
 func main() {
