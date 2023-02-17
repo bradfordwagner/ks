@@ -128,8 +128,7 @@ func execute(isLocal bool, args []string) {
 		if tmux {
 			tmuxSplit(filePath)
 		} else if pipe {
-			exportCommand := getKubeExportCommand(filePath)
-			_, _ = os.Stdout.Write([]byte(exportCommand))
+			_, _ = os.Stdout.Write([]byte(filePath))
 		} else if setEnv {
 			if err := execKubeContextCommand(filePath); err != nil {
 				logrus.WithError(err).Fatal("could not copy export command")
