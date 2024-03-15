@@ -2,8 +2,9 @@ builds:
   - id: cli
     main: ./cmd/ks
     goos:
-      - linux
       - darwin
+      - linux
+      - windows
     goarch:
       - amd64
       - arm64
