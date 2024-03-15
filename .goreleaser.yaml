@@ -3,7 +3,6 @@ builds:
     main: ./cmd/ks
     goos:
       - linux
-      - windows
       - darwin
     goarch:
       - amd64
