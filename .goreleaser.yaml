@@ -1,6 +1,8 @@
 builds:
   - id: cli
     main: ./cmd/ks
+    env:
+      - CGO_ENABLED=0
     goos:
       - darwin
       - linux
