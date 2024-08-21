@@ -6,7 +6,7 @@
   - [y] open and name window
   - [y] copy to buffer
   - [ ] remove kcc hack
-  - [ ] integrate into dotfiles 
+  - [y] integrate into dotfiles 
 - [y] ks link
 
 ## Local
