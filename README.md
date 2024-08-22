@@ -8,6 +8,7 @@
   - [ ] remove kcc hack
   - [y] integrate into dotfiles 
 - [y] ks link
+- [ ] resources load
 
 ## Local
 ```bash

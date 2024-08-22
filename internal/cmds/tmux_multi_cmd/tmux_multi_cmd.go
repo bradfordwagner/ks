@@ -11,7 +11,7 @@ import (
 	"github.com/koki-develop/go-fzf"
 )
 
-func Run(a args.TmuxMultiArgs) (err error) {
+func Run(a args.Standard) (err error) {
 	l := log.Log()
 
 	configs, err := list.Kubeconfigs(a.Directory)
