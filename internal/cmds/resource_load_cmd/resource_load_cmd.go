@@ -5,6 +5,7 @@ import (
 	"github.com/bradfordwagner/ks/internal/args"
 	"github.com/bradfordwagner/ks/internal/kube"
 	"github.com/bradfordwagner/ks/internal/resources"
+	"sort"
 	"strings"
 )
 
@@ -32,6 +33,7 @@ func Run(a args.Standard) (err error) {
 			}
 		}
 	}
+	sort.Strings(r.Names)
 
 	for _, n := range r.Names {
 		l.With("resource", n).Info("found resource")

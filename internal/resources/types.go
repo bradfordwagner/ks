@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"sort"
 )
 
 const CacheFile = ".resources.json"
@@ -16,7 +15,6 @@ type Resources struct {
 }
 
 func (r Resources) Write(ksdir string) (fileName string, err error) {
-	sort.Strings(r.Names)
 	// convert r to json and write to CacheFile
 	bytes, err := json.MarshalIndent(r, "", "  ")
 	if err != nil {
