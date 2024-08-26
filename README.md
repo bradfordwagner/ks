@@ -16,7 +16,7 @@
   - [ ] multi_kube_ctx
   - [y] kube_new_window
   - [ ] allns_resource
-- jump off to all cmds
+- [y] jump off to all cmds
 
 
 ## Local
