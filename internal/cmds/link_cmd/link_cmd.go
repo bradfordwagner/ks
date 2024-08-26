@@ -11,7 +11,7 @@ import (
 	"github.com/koki-develop/go-fzf"
 )
 
-func Run(a args.PipeArgs) (err error) {
+func Run(a args.Standard) (err error) {
 	l := log.Log()
 
 	// list kubeconfigs

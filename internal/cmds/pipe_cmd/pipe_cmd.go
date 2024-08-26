@@ -11,7 +11,7 @@ import (
 )
 
 // Run is the main entry point for the pipe command
-func Run(a args.PipeArgs) (err error) {
+func Run(a args.Standard) (err error) {
 	l := log.Log()
 
 	configs, err := list.Kubeconfigs(a.Directory)
