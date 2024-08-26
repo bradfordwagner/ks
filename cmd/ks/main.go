@@ -19,6 +19,7 @@ func init() {
 	commands = []*cobra.Command{
 		linkCmd,
 		pipeCmd,
+		resourceAllCmd,
 		resourceCmd,
 		resourceLoadCommand,
 		tmuxMultiCmd,

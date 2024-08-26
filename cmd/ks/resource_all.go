@@ -7,14 +7,14 @@ import (
 )
 
 func init() {
-	standardFlagsInit(resourceCmd.Flags())
+	standardFlagsInit(resourceAllCmd.Flags())
 }
 
-var resourceCmd = &cobra.Command{
-	Use:   "resource",
-	Short: "resource opens k9s with selected resource view",
+var resourceAllCmd = &cobra.Command{
+	Use:   "resource_all",
+	Short: "resource all opens k9s with selected resource view",
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		flag_helper.Load(&standardArgs)
-		return cmds.Resource(standardArgs, false)
+		return cmds.Resource(standardArgs, true)
 	},
 }
