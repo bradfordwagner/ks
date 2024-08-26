@@ -15,7 +15,7 @@
   - [ ] select_kube_ctx_cp
   - [ ] multi_kube_ctx
   - [y] kube_new_window
-  - [ ] allns_resource
+  - [y] allns_resource (all_resource)
 - [y] jump off to all cmds
 
 

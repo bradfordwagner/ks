@@ -10,7 +10,7 @@ import (
 )
 
 // Resource opens k9s with selected resource view
-func Resource(a args.Standard) (err error) {
+func Resource(a args.Standard, all bool) (err error) {
 	// Load resources
 	r, err := resources.LoadResources(a.Directory)
 	if err != nil {
@@ -25,8 +25,15 @@ func Resource(a args.Standard) (err error) {
 		return
 	}
 
+	// if all is true, run k9s with all resources
+	args := []string{"-c", resourceType}
+	if all {
+		args = append(args, "-A")
+
+	}
+
 	// run k9s with the selected resource type
-	k9s.Run("-c", resourceType)
+	k9s.Run(args...)
 
 	return
 }
