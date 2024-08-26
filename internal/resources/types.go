@@ -6,8 +6,10 @@ import (
 	"os"
 )
 
-const CacheFile = ".resources.json"
-const Perms = 0644 // rw-r--r--
+const (
+	CacheFile = ".resources.json"
+	Perms     = 0644 // rw-r--r--
+)
 
 // Resources is a struct that contains a list of resource names
 type Resources struct {
