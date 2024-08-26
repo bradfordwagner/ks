@@ -7,7 +7,7 @@
 - [y] ks link
 - [y] resources load
 - existing commands
-  - [ ] resource
+  - [y] resource
   - [ ] ns_resource
   - [ ] select_ns
   - [ ] new_ctx_ns_cp
