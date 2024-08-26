@@ -1,23 +1,30 @@
 name: go_releaser_branches
 on:
-  - push
-  - workflow_dispatch
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+  workflow_dispatch: {}
 jobs:
   go-releaser-branches:
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup go-task
-        uses: pnorton5432/setup-task@v1
-        with:
-          task-version: 3.35.1
-      - name: task version
-        run: task --version
-      - name: checkout taskfiles
+      - name: checkout=self
+        uses: actions/checkout@v4
+      - name: task=latest
+        run: |
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
+          export PATH=$(pwd)/bin:$PATH
+      - name: task=version
+        run: ./bin/task --version
+      - name: checkout=taskfiles@main
         uses: actions/checkout@v4
         with:
           path: taskfiles
           repository: bradfordwagner/taskfiles
+          ref: main
       - name: go=1.21
         uses: actions/setup-go@v5
         with:
