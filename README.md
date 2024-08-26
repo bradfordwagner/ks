@@ -9,7 +9,7 @@
 - existing commands
   - [y] resource
   - [x] ns_resource
-  - [ ] select_ns
+  - [y] select_ns
   - [ ] new_ctx_ns_cp
   - [y] select_primary_kube_ctx
   - [ ] select_kube_ctx_cp

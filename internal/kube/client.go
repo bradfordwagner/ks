@@ -50,3 +50,11 @@ func config(kubeconfig string) (config *rest.Config, err error) {
 
 	return
 }
+
+func SetNamespace(kubeconfig, namespace string) (err error) {
+	load, err := clientcmd.LoadFromFile(kubeconfig)
+	for _, context := range load.Contexts {
+		context.Namespace = namespace
+	}
+	return clientcmd.WriteToFile(*load, kubeconfig)
+}
