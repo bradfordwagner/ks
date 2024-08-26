@@ -19,6 +19,7 @@ func init() {
 	rootCmd.AddCommand(
 		linkCmd,
 		pipeCmd,
+		resourceCmd,
 		resourceLoadCommand,
 		tmuxMultiCmd,
 		tmuxWindowCmd,

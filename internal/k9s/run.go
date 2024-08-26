@@ -7,7 +7,8 @@ import (
 
 // Run executes k9s with args with interactive terminal
 func Run(args ...string) {
-	cmd := exec.Command("k9s", args...)
+	a := append([]string{"--headless"}, args...)
+	cmd := exec.Command("k9s", a...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

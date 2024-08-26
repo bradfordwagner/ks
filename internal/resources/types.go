@@ -27,3 +27,15 @@ func (r Resources) Write(ksdir string) (fileName string, err error) {
 	err = os.WriteFile(fileName, bytes, Perms)
 	return
 }
+
+// LoadResources reads the json file at ksdir/.resources.json and returns a Resources struct
+func LoadResources(ksdir string) (r Resources, err error) {
+	fileName := fmt.Sprintf("%s/%s", ksdir, CacheFile)
+	bytes, err := os.ReadFile(fileName)
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal(bytes, &r)
+	return
+}
