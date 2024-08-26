@@ -8,7 +8,7 @@
 - [y] resources load
 - existing commands
   - [y] resource
-  - [ ] ns_resource
+  - [x] ns_resource
   - [ ] select_ns
   - [ ] new_ctx_ns_cp
   - [y] select_primary_kube_ctx
