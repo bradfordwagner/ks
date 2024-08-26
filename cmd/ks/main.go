@@ -22,6 +22,7 @@ func init() {
 		resourceAllCmd,
 		resourceCmd,
 		resourceLoadCommand,
+		setNamespaceCmd,
 		tmuxMultiCmd,
 		tmuxWindowCmd,
 	}
