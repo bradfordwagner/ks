@@ -37,5 +37,11 @@ func Run(a args.Standard) (err error) {
 		l.With("resource", n).Info("found resource")
 	}
 
+	resourceFile, err := r.Write(a.Directory)
+	if err != nil {
+		return err
+	}
+	l.With("file", resourceFile).Info("wrote resources to file")
+
 	return
 }

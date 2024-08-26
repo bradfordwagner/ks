@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 )
 
 const CacheFile = ".resources.json"
@@ -14,14 +15,15 @@ type Resources struct {
 	Names []string `json:"names"`
 }
 
-func (r Resources) Write(ksdir string) (err error) {
+func (r Resources) Write(ksdir string) (fileName string, err error) {
+	sort.Strings(r.Names)
 	// convert r to json and write to CacheFile
-	bytes, err := json.Marshal(r)
+	bytes, err := json.MarshalIndent(r, "", "  ")
 	if err != nil {
-		return err
+		return
 	}
 
-	fileName := fmt.Sprintf("%s/%s", ksdir, CacheFile)
+	fileName = fmt.Sprintf("%s/%s", ksdir, CacheFile)
 	err = os.WriteFile(fileName, bytes, Perms)
 	return
 }
