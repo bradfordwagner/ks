@@ -1,4 +1,4 @@
-package link_cmd
+package cmds
 
 import (
 	"errors"
@@ -6,37 +6,35 @@ import (
 	"github.com/bradfordwagner/go-util/log"
 	"github.com/bradfordwagner/ks/internal/args"
 	"github.com/bradfordwagner/ks/internal/choose"
-	"github.com/bradfordwagner/ks/internal/link"
 	"github.com/bradfordwagner/ks/internal/list"
+	"github.com/bradfordwagner/ks/internal/tmux"
 	"github.com/koki-develop/go-fzf"
 )
 
-func Run(a args.Standard) (err error) {
+func TmuxMulti(a args.Standard) (err error) {
 	l := log.Log()
 
-	// list kubeconfigs
 	configs, err := list.Kubeconfigs(a.Directory)
 	if err != nil {
 		l.With("error", err).Error("error listing kubeconfigs")
 		return
 	}
 
-	// choose a kubeconfig
-	one, err := choose.One(configs)
-	if errors.Is(fzf.ErrAbort, err) {
-		return nil
+	selected, err := choose.Multi(configs)
+	if errors.Is(err, fzf.ErrAbort) {
+		return
 	} else if err != nil {
 		l.With("error", err).Error("error choosing kubeconfig")
 		return
 	}
-	fmt.Print(one)
 
-	// link the chosen kubeconfig
-	source := fmt.Sprintf("%s/%s", a.Directory, one)
-	target := fmt.Sprintf("%s/config", a.Directory)
-	err = link.ForceLink(source, target)
-	if err != nil {
-		l.With("error", err).Error("error linking kubeconfig")
+	// open a pane per kubeconfig and set the KUBECONFIG env var
+	for _, kubeconfig := range selected {
+		err := tmux.Split(fmt.Sprintf("%s/%s", a.Directory, kubeconfig))
+		if err != nil {
+			l.With("error", err).Error("error splitting tmux window")
+			return err
+		}
 	}
 
 	return

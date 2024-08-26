@@ -1,4 +1,4 @@
-package resource_load_cmd
+package cmds
 
 import (
 	"github.com/bradfordwagner/go-util/log"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Run(a args.Standard) (err error) {
+func ResourceLoad(a args.Standard) (err error) {
 	l := log.Log()
 
 	client, err := kube.Client(a.Kubeconfig)

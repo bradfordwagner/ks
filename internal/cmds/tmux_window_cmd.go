@@ -1,8 +1,7 @@
-package tmux_multi_cmd
+package cmds
 
 import (
 	"errors"
-	"fmt"
 	"github.com/bradfordwagner/go-util/log"
 	"github.com/bradfordwagner/ks/internal/args"
 	"github.com/bradfordwagner/ks/internal/choose"
@@ -11,7 +10,7 @@ import (
 	"github.com/koki-develop/go-fzf"
 )
 
-func Run(a args.Standard) (err error) {
+func TmuxWindow(a args.Standard) (err error) {
 	l := log.Log()
 
 	configs, err := list.Kubeconfigs(a.Directory)
@@ -20,7 +19,7 @@ func Run(a args.Standard) (err error) {
 		return
 	}
 
-	selected, err := choose.Multi(configs)
+	one, err := choose.One(configs)
 	if errors.Is(err, fzf.ErrAbort) {
 		return
 	} else if err != nil {
@@ -28,14 +27,6 @@ func Run(a args.Standard) (err error) {
 		return
 	}
 
-	// open a pane per kubeconfig and set the KUBECONFIG env var
-	for _, kubeconfig := range selected {
-		err := tmux.Split(fmt.Sprintf("%s/%s", a.Directory, kubeconfig))
-		if err != nil {
-			l.With("error", err).Error("error splitting tmux window")
-			return err
-		}
-	}
-
-	return
+	// create new tmux window
+	return tmux.NewWindow(a.Directory, one)
 }
