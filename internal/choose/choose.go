@@ -23,7 +23,6 @@ func One(opts []string) (res string, err error) {
 func Multi(opts []string) (res []string, err error) {
 	return choose(opts,
 		fzf.WithNoLimit(true),
-		fzf.WithPrompt("whats this? "),
 		fzf.WithKeyMap(fzf.KeyMap{
 			Toggle: []string{"tab", "ctrl+s"},
 		}),
