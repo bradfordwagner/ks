@@ -17,7 +17,7 @@
   - [y] kube_new_window
   - [y] allns_resource (all_resource)
 - [y] jump off to all cmds
-  - [ ] allow ordering to set hierarchy on matching cmds
+  - [y] allow completion ordering for default
 
 
 ## Local

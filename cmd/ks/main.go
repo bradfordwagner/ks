@@ -1,12 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"github.com/bradfordwagner/go-util/bwutil"
 	"github.com/bradfordwagner/go-util/flag_helper"
 	"github.com/bradfordwagner/go-util/log"
 	"github.com/bradfordwagner/ks/internal/args"
 	"github.com/bradfordwagner/ks/internal/choose"
+	"github.com/koki-develop/go-fzf"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"os"
@@ -17,15 +18,15 @@ var commands []*cobra.Command
 
 func init() {
 	commands = []*cobra.Command{
-		linkCmd,
-		pipeCmd,
-		resourceAllCmd,
 		resourceCmd,
-		resourceLoadCommand,
+		resourceAllCmd,
 		setNamespaceCmd,
 		tmuxMultiCmd,
 		tmuxWindowCmd,
 		kubeCopyCommand,
+		linkCmd,
+		pipeCmd,
+		resourceLoadCommand,
 	}
 	rootCmd.AddCommand(commands...)
 }
@@ -52,13 +53,17 @@ var rootCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		// map command names to commands
 		nameToCommand := make(map[string]*cobra.Command)
+		var names []string
 		for _, command := range commands {
 			nameToCommand[command.Name()] = command
+			names = append(names, command.Name())
 		}
 
-		sortedNames := bwutil.MapKeys(nameToCommand)
-		selectedCommand, err := choose.One(sortedNames)
-		if err != nil {
+		// choose a command
+		selectedCommand, err := choose.One(names)
+		if errors.Is(fzf.ErrAbort, err) {
+			return nil
+		} else if err != nil {
 			return err
 		}
 
