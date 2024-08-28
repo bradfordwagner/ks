@@ -25,6 +25,7 @@ func init() {
 		setNamespaceCmd,
 		tmuxMultiCmd,
 		tmuxWindowCmd,
+		kubeCopyCommand,
 	}
 	rootCmd.AddCommand(commands...)
 }
