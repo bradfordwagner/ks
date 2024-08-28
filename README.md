@@ -10,7 +10,7 @@
   - [y] resource
   - [x] ns_resource
   - [y] select_ns
-  - [ ] new_ctx_ns_cp
+  - [y] new_ctx_ns_cp (kube_new_ns)
   - [y] select_primary_kube_ctx
   - [y] select_kube_ctx_cp (kube_cp)
   - [y] multi_kube_ctx

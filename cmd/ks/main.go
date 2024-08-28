@@ -24,6 +24,7 @@ func init() {
 		tmuxMultiCmd,
 		tmuxWindowCmd,
 		kubeCopyCommand,
+		kubeNewNamespaceCommand,
 		linkCmd,
 		pipeCmd,
 		resourceLoadCommand,
