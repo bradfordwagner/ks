@@ -2,8 +2,8 @@
 
 - [y] ks pipe - KUBECONFIG=$(ks pipe)
 - [y] ks tmux_multi
-- [ ] ks tmux_window
-  - [ ] remove kcc hack
+- [y] ks tmux_window
+  - [y] remove kcc hack
 - [y] ks link
 - [y] resources load
 - existing commands
