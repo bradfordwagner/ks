@@ -12,11 +12,12 @@
   - [y] select_ns
   - [ ] new_ctx_ns_cp
   - [y] select_primary_kube_ctx
-  - [ ] select_kube_ctx_cp
+  - [y] select_kube_ctx_cp (kube_cp)
   - [ ] multi_kube_ctx
   - [y] kube_new_window
   - [y] allns_resource (all_resource)
 - [y] jump off to all cmds
+  - [ ] allow ordering to set hierarchy on matching cmds
 
 
 ## Local
