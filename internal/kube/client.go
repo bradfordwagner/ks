@@ -4,6 +4,7 @@ import (
 	"github.com/bradfordwagner/go-util/log"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc" // this blank import is necessary to load the oidc plugin for client-go: otherwise No Auth Provider found for name "oidc"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
