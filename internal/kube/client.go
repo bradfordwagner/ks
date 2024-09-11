@@ -17,6 +17,9 @@ func Client(kubeconfig string) (clientset kubernetes.Interface, err error) {
 		return
 	}
 
+	// silence warnings from k8s client-go
+	rest.SetDefaultWarningHandler(rest.NoWarnings{})
+
 	clientset, err = kubernetes.NewForConfig(config)
 	if err != nil {
 		l.With("error", err).Error("failed to create kubernetes client")
