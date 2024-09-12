@@ -28,6 +28,8 @@ func init() {
 		linkCmd,
 		pipeCmd,
 		resourceLoadCommand,
+		clearCacheCmd,
+		clearPaneCmd,
 	}
 	rootCmd.AddCommand(commands...)
 }

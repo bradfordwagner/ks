@@ -17,19 +17,26 @@ func Resource(a args.Standard, all bool) (err error) {
 		return
 	}
 
-	// choose a resource type
-	resourceType, err := choose.One(r.Names)
-	if errors.Is(err, fzf.ErrAbort) {
-		return nil
-	} else if err != nil {
-		return
+	// Get the resource type
+	resourceType := r.Get()
+	if resourceType == "" {
+		//choose a resource type
+		resourceType, err = choose.One(r.Names)
+		if errors.Is(err, fzf.ErrAbort) {
+			return nil
+		} else if err != nil {
+			return
+		}
+
+		// save the selected resource type
+		r.Upsert(resourceType)
+		go r.Write(a.Directory)
 	}
 
 	// if all is true, run k9s with all resources
 	args := []string{"-c", resourceType}
 	if all {
 		args = append(args, "-A")
-
 	}
 
 	// run k9s with the selected resource type
