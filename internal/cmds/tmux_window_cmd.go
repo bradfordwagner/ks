@@ -21,7 +21,7 @@ func TmuxWindow(a args.Standard) (err error) {
 
 	one, err := choose.One(configs)
 	if errors.Is(err, fzf.ErrAbort) {
-		return
+		return nil
 	} else if err != nil {
 		l.With("error", err).Error("error choosing kubeconfig")
 		return

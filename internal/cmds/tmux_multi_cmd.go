@@ -22,7 +22,7 @@ func TmuxMulti(a args.Standard) (err error) {
 
 	selected, err := choose.Multi(configs)
 	if errors.Is(err, fzf.ErrAbort) {
-		return
+		return nil
 	} else if err != nil {
 		l.With("error", err).Error("error choosing kubeconfig")
 		return

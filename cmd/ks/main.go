@@ -62,14 +62,18 @@ var rootCmd = &cobra.Command{
 			names = append(names, command.Name())
 		}
 
-		// choose a command
-		selectedCommand, err := choose.One(names)
-		if errors.Is(fzf.ErrAbort, err) {
-			return nil
-		} else if err != nil {
-			return err
+		for {
+			// choose a command
+			selectedCommand, err := choose.One(names)
+			if errors.Is(fzf.ErrAbort, err) {
+				return nil
+			} else if err != nil {
+				return err
+			}
+			err = nameToCommand[selectedCommand].RunE(cmd, args)
+			if err != nil {
+				return err
+			}
 		}
-
-		return nameToCommand[selectedCommand].RunE(cmd, args)
 	},
 }
