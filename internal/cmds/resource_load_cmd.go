@@ -1,6 +1,7 @@
 package cmds
 
 import (
+	"github.com/bradfordwagner/go-util/bwutil"
 	"github.com/bradfordwagner/go-util/log"
 	"github.com/bradfordwagner/ks/internal/args"
 	"github.com/bradfordwagner/ks/internal/kube"
@@ -23,16 +24,18 @@ func ResourceLoad(a args.Standard) (err error) {
 	}
 
 	var r resources.Resources
+	resourceNames := bwutil.NewSet[string]()
 	for _, resource := range kuberesources {
 		for _, apiResource := range resource.APIResources {
 			// exclude sub resource types eg:
 			// prioritylevelconfigurations/status
 			// cronjobs/status
 			if !strings.Contains(apiResource.Name, "/") {
-				r.Names = append(r.Names, apiResource.Name)
+				resourceNames.Add(apiResource.Name)
 			}
 		}
 	}
+	r.Names = resourceNames.Keyset()
 	sort.Strings(r.Names)
 
 	for _, n := range r.Names {
