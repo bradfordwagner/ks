@@ -21,26 +21,28 @@ func Resource(a args.Standard, all bool) (err error) {
 	resourceType := r.Get()
 	if resourceType == "" {
 		//choose a resource type
-		resourceType, err = choose.One(r.Names)
+		resourceType, err = choose.One(r.SortedNames())
 		if errors.Is(err, fzf.ErrAbort) {
 			return nil
 		} else if err != nil {
 			return
 		}
 
-		// save the selected resource type
+		// save the selected resource type and increment its vote
 		r.Upsert(resourceType)
-		go r.Write(a.Directory)
 	}
 
+	r.VoteFor(resourceType)
+	go r.Write(a.Directory)
+
 	// if all is true, run k9s with all resources
-	args := []string{"-c", resourceType}
+	k9sArgs := []string{"-c", resourceType}
 	if all {
-		args = append(args, "-A")
+		k9sArgs = append(k9sArgs, "-A")
 	}
 
 	// run k9s with the selected resource type
-	k9s.Run(args...)
+	k9s.Run(k9sArgs...)
 
 	return
 }
