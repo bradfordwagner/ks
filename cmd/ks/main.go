@@ -30,6 +30,7 @@ func init() {
 		resourceLoadCommand,
 		clearCacheCmd,
 		clearPaneCmd,
+		resourceLeaderboardCmd,
 	}
 	rootCmd.AddCommand(commands...)
 }
