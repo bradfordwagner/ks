@@ -12,8 +12,11 @@ go install ./cmd/ks
 **Test:**
 ```bash
 go test ./...
-go test ./internal/resources/...  # single package
+go test ./internal/resources/...          # single package
+go test ./internal/resources/... -run TestResources/SortedNames  # single spec
 ```
+
+Tests use [Ginkgo v2](https://onsi.github.io/ginkgo/) + Gomega (BDD-style). Each package with tests has a `suite_test.go` that bootstraps `RunSpecs`. Use `-run <suite>/<describe>/<it-text>` to target a single spec; Ginkgo also supports `FIt`/`FDescribe` focus markers.
 
 **Lint/Vet:**
 ```bash
@@ -31,7 +34,35 @@ goreleaser build --snapshot --clean
 
 ### Entry Point Flow
 
-`cmd/ks/main.go` registers ~12 Cobra commands. When invoked without arguments, the root command presents an fzf menu of commands to run (a recursive self-selection loop). Each `cmd/ks/*.go` file wires flags and delegates to `internal/cmds/`.
+`cmd/ks/main.go` registers all Cobra commands. Without arguments, the root command presents an fzf menu and loops: pick a command, run it, repeat (exit via Esc/Ctrl-C). Each `cmd/ks/*.go` file wires flags and delegates to `internal/cmds/`.
+
+All commands share the same `standardArgs` (type `args.Standard`) with three flags:
+
+| Flag | Short | Env | Default |
+|------|-------|-----|---------|
+| `--dir` | `-d` | `KS_DIR` | `~/.kube` |
+| `--kubeconfig` | `-k` | `KUBECONFIG` | `~/.kube/config` |
+| `--timeout` | `-t` | — | `10s` |
+
+Flags are populated from env vars via `flag_helper.Load` at command runtime (not at init time).
+
+### Command Reference
+
+| Command | What it does |
+|---------|-------------|
+| `resource` | fzf-pick a k8s resource type → launch k9s at that view; skips fzf if pane already has a cached resource |
+| `resource_all` | same as `resource` but passes `-A` (all namespaces) to k9s |
+| `resource_load` | calls the cluster's discovery API, writes resource names to `~/.kube/.ks.resources.json`; **must run before `resource`** |
+| `resource_leaderboard` | tabular view of resource usage counts; `--all` includes zero-vote entries |
+| `set_ns` | fzf-pick a namespace → mutates the kubeconfig's current-context namespace |
+| `tmux_multi` | multi-select kubeconfigs → split one tmux pane per selection, each with `KUBECONFIG` set |
+| `tmux_window` | fzf-pick one kubeconfig → open a new tmux window with `KUBECONFIG` set |
+| `kube_cp` | fzf-pick a kubeconfig → load its path into the tmux clipboard buffer |
+| `kube_new_ns` | fzf-pick a kubeconfig → create a new namespace in that cluster |
+| `link` | fzf-pick a kubeconfig → symlink it to `~/.kube/config` |
+| `pipe` | fzf-pick a kubeconfig → print its full path to stdout (no newline); designed for shell pipes |
+| `clear_cache` | wipe the entire tmux→pane→resource cache in `.ks.resources.json` |
+| `clear_pane` | remove only the current tmux pane's cached resource entry |
 
 ### Package Responsibilities
 
@@ -47,21 +78,20 @@ goreleaser build --snapshot --clean
 | `internal/link` | Symlink management for `~/.kube/config` |
 | `internal/list` | Lists kubeconfig files from a directory |
 
-### Resource Caching
+### Resource Cache (`internal/resources`)
 
-`internal/resources/types.go` maintains a per-tmux-pane JSON cache of the last-used Kubernetes resource type. The cache key is derived from the `$TMUX` environment variable (session + pane ID). Commands like `resource` read this cache to default to the previously selected resource, then upsert on selection.
+`~/.kube/.ks.resources.json` (v2 schema) stores two things:
+- `names`: `[]ResourceEntry{Name, Votes}` — every known k8s resource type with selection counts
+- `cache`: nested map `$TMUX → $TMUX_PANE → resource-name` — the last resource selected per pane
+
+On `resource` invocation: if the current pane already has a cached resource it skips fzf, increments that resource's vote, and writes the file asynchronously (`go r.Write(...)`) so k9s starts without waiting.
+
+`resource_load` preserves existing votes when refreshing — it merges discovery results with the existing file. The file migrates automatically from v1 (flat `[]string` names) to v2 (`[]ResourceEntry`) on first load.
 
 ### Tmux Integration Pattern
 
-Commands that spawn tmux panes/windows set `KUBECONFIG=<path>` in the new pane's environment. `tmux_multi` uses multi-select fzf to pick multiple kubeconfigs and opens one pane per selection in tiled layout.
-
-### Key Dependencies
-
-- `github.com/spf13/cobra` — CLI framework
-- `github.com/koki-develop/go-fzf` — interactive fuzzy selection
-- `k8s.io/client-go` — Kubernetes API (namespace listing, kubeconfig mutation)
-- `github.com/bradfordwagner/go-util` — shared utilities
+Commands that spawn panes/windows set `KUBECONFIG=<path>` in the new pane's environment. `tmux_multi` uses multi-select fzf to pick multiple kubeconfigs and opens one pane per selection in tiled layout.
 
 ### CI
 
-GitHub Actions workflows in `.github/workflows/` delegate to external taskfiles (`github.com/bradfordwagner/taskfiles`). Branch pushes trigger a snapshot build; git tags trigger a full GoReleaser release with checksums.
+GitHub Actions workflows in `.github/workflows/` delegate to external taskfiles (`github.com/bradfordwagner/taskfiles`). Branch pushes trigger a snapshot build; git tags trigger a full GoReleaser release with checksums. `workflow.yaml` at the repo root is an Argo Workflows template used for alternative CI builds via `quay.io/bradfordwagner/go-builder`.
