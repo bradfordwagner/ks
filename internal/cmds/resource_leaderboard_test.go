@@ -1,18 +1,16 @@
-package cmds_test
+package cmds
 
 import (
+	"io"
 	"os"
 	"path/filepath"
-	"io"
 	"strings"
 	"testing"
 
+	"github.com/bradfordwagner/ks/internal/args"
+	"github.com/bradfordwagner/ks/internal/resources"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"github.com/bradfordwagner/ks/internal/args"
-	"github.com/bradfordwagner/ks/internal/cmds"
-	"github.com/bradfordwagner/ks/internal/resources"
 )
 
 func TestCmds(t *testing.T) {
@@ -26,8 +24,8 @@ func captureLeaderboard(dir string, all bool) string {
 	old := os.Stdout
 	os.Stdout = w
 
-	a := args.Standard{Directory: dir}
-	_ = cmds.ResourceLeaderboard(a, all)
+	a := args.Standard{DataDir: dir}
+	_ = ResourceLeaderboard(a, all)
 
 	w.Close()
 	os.Stdout = old
@@ -54,11 +52,10 @@ var _ = Describe("ResourceLeaderboard", func() {
 
 	Context("3.1 missing file", func() {
 		It("prints a friendly message and returns nil", func() {
-			// ensure no file exists
 			_ = os.Remove(filepath.Join(dir, ".ks.resources.json"))
 
-			a := args.Standard{Directory: dir}
-			err := cmds.ResourceLeaderboard(a, false)
+			a := args.Standard{DataDir: dir}
+			err := ResourceLeaderboard(a, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
@@ -111,7 +108,6 @@ var _ = Describe("ResourceLeaderboard", func() {
 
 			out := captureLeaderboard(dir, false)
 			lines := strings.Split(strings.TrimSpace(out), "\n")
-			// lines[0] = header, lines[1..] = data rows
 			Expect(lines).To(HaveLen(5)) // header + 4 entries
 			Expect(lines[1]).To(ContainSubstring("pods"))
 			Expect(lines[2]).To(ContainSubstring("configmaps"))

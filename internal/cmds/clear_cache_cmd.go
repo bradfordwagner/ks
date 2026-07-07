@@ -10,7 +10,7 @@ func ClearCache(a args.Standard, all bool) (err error) {
 	l := log.Log()
 
 	// Load resources
-	r, err := resources.LoadResources(a.Directory)
+	r, err := resources.LoadResources(a.DataDir)
 	if err != nil {
 		l.With("error", err).Error("failed to load resources")
 		return err
@@ -23,6 +23,6 @@ func ClearCache(a args.Standard, all bool) (err error) {
 		l.Info("clearing pane cache")
 		r.ResetPane()
 	}
-	_, err = r.Write(a.Directory)
+	_, err = r.Write(a.DataDir)
 	return
 }

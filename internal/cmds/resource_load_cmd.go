@@ -26,7 +26,7 @@ func ResourceLoad(a args.Standard) (err error) {
 	}
 
 	// Load existing file to preserve votes; ignore not-found.
-	existing, loadErr := resources.LoadResources(a.Directory)
+	existing, loadErr := resources.LoadResources(a.DataDir)
 	if loadErr != nil && !errors.Is(loadErr, os.ErrNotExist) {
 		// Non-fatal: log and proceed with empty votes.
 		l.With("err", loadErr).Warn("could not load existing resources file; votes will be reset")
@@ -66,7 +66,7 @@ func ResourceLoad(a args.Standard) (err error) {
 		Names:   entries,
 	}
 
-	resourceFile, err := r.Write(a.Directory)
+	resourceFile, err := r.Write(a.DataDir)
 	if err != nil {
 		return err
 	}

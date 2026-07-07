@@ -12,7 +12,7 @@ import (
 )
 
 func ResourceLeaderboard(a args.Standard, all bool) error {
-	r, err := resources.LoadResources(a.Directory)
+	r, err := resources.LoadResources(a.DataDir)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			fmt.Println("no resource data found — run 'ks resource_load' first")

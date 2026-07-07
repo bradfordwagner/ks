@@ -23,8 +23,7 @@ type ResourceEntry struct {
 
 // Resources is a struct that contains a list of resource names
 type Resources struct {
-	Version int             `json:"version"`
-	// TMUX env variable cache
+	Version int              `json:"version"`
 	Cache   map[string]Cache `json:"cache"`
 	Names   []ResourceEntry  `json:"names"`
 }
@@ -78,6 +77,17 @@ func (r *Resources) Upsert(resource string) {
 	c := r.Cache[tmux]
 	c.IdToResource[pane] = resource
 }
+
+// GetByPane looks up a resource by pane ID across all tmux sessions in the cache.
+func (r *Resources) GetByPane(paneID string) string {
+	for _, c := range r.Cache {
+		if resource, ok := c.IdToResource[paneID]; ok {
+			return resource
+		}
+	}
+	return ""
+}
+
 
 func (r *Resources) Get() (resource string) {
 	// load tmux and pane from env

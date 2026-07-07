@@ -31,6 +31,8 @@ func init() {
 		clearCacheCmd,
 		clearPaneCmd,
 		resourceLeaderboardCmd,
+		resurrectSaveCmd,
+		resurrectRestoreCmd,
 	}
 	rootCmd.AddCommand(commands...)
 }
@@ -38,8 +40,18 @@ func init() {
 func standardFlagsInit(fs *pflag.FlagSet) {
 	home, _ := os.UserHomeDir()
 	flag_helper.CreateFlag(fs, &standardArgs.Directory, "dir", "d", fmt.Sprintf("%s/.kube", home), "env.KS_DIR,default=home/.kube")
+	flag_helper.CreateFlag(fs, &standardArgs.DataDir, "data-dir", "", fmt.Sprintf("%s/.ks", home), "env.KS_DATA_DIR,default=home/.ks")
 	flag_helper.CreateFlag(fs, &standardArgs.Kubeconfig, "kubeconfig", "k", fmt.Sprintf("%s/.kube/config", home), "env.KUBECONFIG,default=home/.kube/config")
 	flag_helper.CreateFlag(fs, &standardArgs.Timeout, "timeout", "t", 10*time.Second, "default=10s")
+}
+
+func ensureDataDir() {
+	home, _ := os.UserHomeDir()
+	dataDir := os.Getenv("KS_DATA_DIR")
+	if dataDir == "" {
+		dataDir = fmt.Sprintf("%s/.ks", home)
+	}
+	_ = os.MkdirAll(dataDir, 0755)
 }
 
 var standardArgs args.Standard
@@ -54,6 +66,10 @@ func main() {
 
 var rootCmd = &cobra.Command{
 	Use: "ks",
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		ensureDataDir()
+		return nil
+	},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		// map command names to commands
 		nameToCommand := make(map[string]*cobra.Command)
