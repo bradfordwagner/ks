@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	ResurrectFile   = ".ks.resurrect.json"
+	ResurrectFile   = "resurrect.json"
 	currentVersion  = 1
 	filePerms       = 0644
 )

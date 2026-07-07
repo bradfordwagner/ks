@@ -56,7 +56,7 @@ Flags are populated from env vars via `flag_helper.Load` at command runtime (not
 |---------|-------------|
 | `resource` | fzf-pick a k8s resource type → launch k9s at that view; skips fzf if pane already has a cached resource |
 | `resource_all` | same as `resource` but passes `-A` (all namespaces) to k9s |
-| `resource_load` | calls the cluster's discovery API, writes resource names to `~/.ks/.ks.resources.json`; **must run before `resource`** |
+| `resource_load` | calls the cluster's discovery API, writes resource names to `~/.ks/resources.json`; **must run before `resource`** |
 | `resource_leaderboard` | tabular view of resource usage counts; `--all` includes zero-vote entries |
 | `set_ns` | fzf-pick a namespace → mutates the kubeconfig's current-context namespace |
 | `tmux_multi` | multi-select kubeconfigs → split one tmux pane per selection, each with `KUBECONFIG` set |
@@ -65,9 +65,9 @@ Flags are populated from env vars via `flag_helper.Load` at command runtime (not
 | `kube_new_ns` | fzf-pick a kubeconfig → create a new namespace in that cluster |
 | `link` | fzf-pick a kubeconfig → symlink it to `~/.kube/config` |
 | `pipe` | fzf-pick a kubeconfig → print its full path to stdout (no newline); designed for shell pipes |
-| `clear_cache` | wipe the entire tmux→pane→resource cache in `~/.ks/.ks.resources.json` |
+| `clear_cache` | wipe the entire tmux→pane→resource cache in `~/.ks/resources.json` |
 | `clear_pane` | remove only the current tmux pane's cached resource entry |
-| `save` | tmux-resurrect pre-save hook: snapshot KUBECONFIG + resource per pane to `~/.ks/.ks.resurrect.json` |
+| `save` | tmux-resurrect pre-save hook: snapshot KUBECONFIG + resource per pane to `~/.ks/resurrect.json` |
 | `restore` | tmux-resurrect post-restore hook: re-apply KUBECONFIG and re-launch `ks resource`/`ks resource_all` per pane |
 
 ### Package Responsibilities
@@ -80,14 +80,14 @@ Flags are populated from env vars via `flag_helper.Load` at command runtime (not
 | `internal/kube` | k8s clientset init, kubeconfig loading, namespace setting |
 | `internal/k9s` | Launches k9s TUI (headless-capable) |
 | `internal/tmux` | Splits panes, creates windows, loads KUBECONFIG into tmux buffer |
-| `internal/resources` | JSON cache (`~/.ks/.ks.resources.json`) keyed by tmux session+pane |
+| `internal/resources` | JSON cache (`~/.ks/resources.json`) keyed by tmux session+pane |
 | `internal/resurrect` | Sidecar types, `/proc` env reading, tmux pane listing for save/restore |
 | `internal/link` | Symlink management for `~/.kube/config` |
 | `internal/list` | Lists kubeconfig files from a directory |
 
 ### Resource Cache (`internal/resources`)
 
-`~/.ks/.ks.resources.json` (v2 schema) stores two things:
+`~/.ks/resources.json` (v2 schema) stores two things:
 - `names`: `[]ResourceEntry{Name, Votes}` — every known k8s resource type with selection counts
 - `cache`: nested map `$TMUX → $TMUX_PANE → resource-name` — the last resource selected per pane
 

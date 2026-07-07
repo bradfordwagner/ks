@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	CacheFile   = ".ks.resources.json"
+	CacheFile   = "resources.json"
 	Perms       = 0644 // rw-r--r--
 	schemaV1    = 1
 	schemaV2    = 2

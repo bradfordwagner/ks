@@ -52,7 +52,7 @@ var _ = Describe("ResourceLeaderboard", func() {
 
 	Context("3.1 missing file", func() {
 		It("prints a friendly message and returns nil", func() {
-			_ = os.Remove(filepath.Join(dir, ".ks.resources.json"))
+			_ = os.Remove(filepath.Join(dir, resources.CacheFile))
 
 			a := args.Standard{DataDir: dir}
 			err := ResourceLeaderboard(a, false)
