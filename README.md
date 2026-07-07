@@ -26,8 +26,9 @@
 
 ### How it works
 
-- **`ks save`** (pre-save hook): scans all tmux panes, extracts `KUBECONFIG` from each pane's process environment via `/proc`, cross-references the resource cache, and writes a positional sidecar `~/.ks/.ks.resurrect.json` keyed by `session/window/pane` index (stable across resurrect)
-- **`ks restore`** (post-restore hook): reads the sidecar, matches panes by positional index, and sends `KS_RESOURCE=<resource> KUBECONFIG=<path> ks resource` (or `ks resource_all`) inline into each pane — no fzf, no manual re-selection
+- **`ks resource` / `ks resource_all`**: writes `{session, window, pane, kubeconfig, resource, verb}` into `~/.ks/.ks.resurrect.json` immediately after resource selection, keyed by stable positional index
+- **`ks save`** (pre-save hook): scans all tmux panes, fills in `KUBECONFIG` from each pane's process environment via `/proc`, and refreshes the sidecar — verb is read from the existing sidecar entry, falling back to k9s cmdline detection for panes with no stored entry
+- **`ks restore`** (post-restore hook): reads the sidecar, matches panes by positional index, sends `export KUBECONFIG=<path>` then `KS_RESOURCE=<resource> ks <verb>` into each matched pane — no fzf, no manual re-selection
 
 ### Setup
 
@@ -40,11 +41,11 @@ set -g @resurrect-hook-post-restore-all 'ks restore'
 
 ### Notes
 
-- `ks save` requires Linux (`/proc` filesystem); it is a no-op on macOS
+- Verb (`resource` vs `resource_all`) is stored at invocation time — run `ks resource` or `ks resource_all` in a pane to record it; `ks save` reads the stored value
 - Panes with neither a `KUBECONFIG` nor a cached resource are silently skipped
-- Panes with only a resource (no `KUBECONFIG`) have the resource and verb restored without setting `KUBECONFIG`
+- Panes with only a resource (no `KUBECONFIG`) have resource+verb restored without setting `KUBECONFIG`
 - Panes with `KUBECONFIG` but no cached resource have only `KUBECONFIG` restored; resource selection falls back to fzf on next `ks resource` invocation
-- Verb (`resource` vs `resource_all`) is detected from the running `k9s` or `ks` process cmdline at save time
+- `/proc` env reading is Linux-specific; on other platforms `KUBECONFIG` will not be captured but resource+verb still are
 - `ks clear_pane` and `ks clear_cache` work normally after restore — `KS_RESOURCE` is never exported into the shell environment
 
 ## Environment Variables
