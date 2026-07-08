@@ -31,7 +31,7 @@ func SetNamespace(a args.Standard) (err error) {
 	}
 
 	// choose a namespace
-	selectedNamespace, err := choose.One(namespaces)
+	selectedNamespace, err := choose.One(namespaces, kube.CurrentContext(a.Kubeconfig))
 	if errors.Is(fzf.ErrAbort, err) {
 		return nil
 	} else if err != nil {

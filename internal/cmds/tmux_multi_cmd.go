@@ -6,6 +6,7 @@ import (
 	"github.com/bradfordwagner/go-util/log"
 	"github.com/bradfordwagner/ks/internal/args"
 	"github.com/bradfordwagner/ks/internal/choose"
+	"github.com/bradfordwagner/ks/internal/kube"
 	"github.com/bradfordwagner/ks/internal/list"
 	"github.com/bradfordwagner/ks/internal/tmux"
 	"github.com/koki-develop/go-fzf"
@@ -20,7 +21,7 @@ func TmuxMulti(a args.Standard) (err error) {
 		return
 	}
 
-	selected, err := choose.Multi(configs)
+	selected, err := choose.Multi(configs, kube.CurrentContext(a.Kubeconfig))
 	if errors.Is(err, fzf.ErrAbort) {
 		return nil
 	} else if err != nil {

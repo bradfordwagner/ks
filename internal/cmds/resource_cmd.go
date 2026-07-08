@@ -7,6 +7,7 @@ import (
 	"github.com/bradfordwagner/ks/internal/args"
 	"github.com/bradfordwagner/ks/internal/choose"
 	"github.com/bradfordwagner/ks/internal/k9s"
+	"github.com/bradfordwagner/ks/internal/kube"
 	"github.com/bradfordwagner/ks/internal/resources"
 	"github.com/bradfordwagner/ks/internal/resurrect"
 	"github.com/koki-develop/go-fzf"
@@ -19,7 +20,7 @@ func Resource(a args.Standard, all bool) (err error) {
 		return
 	}
 
-	resourceType, err := resolveResourceType(&r)
+	resourceType, err := resolveResourceType(&r, kube.CurrentContext(a.Kubeconfig))
 	if err != nil || resourceType == "" {
 		return
 	}
@@ -59,14 +60,14 @@ func upsertResurrectPane(dataDir, resource, verb string) {
 // resolveResourceType returns the resource to display in k9s.
 // Priority: KS_RESOURCE env var → pane cache → fzf selection.
 // Returns ("", nil) if the user aborted fzf.
-func resolveResourceType(r *resources.Resources) (resourceType string, err error) {
+func resolveResourceType(r *resources.Resources, header string) (resourceType string, err error) {
 	if override := os.Getenv("KS_RESOURCE"); override != "" {
 		r.Upsert(override)
 		return override, nil
 	}
 	resourceType = r.Get()
 	if resourceType == "" {
-		resourceType, err = choose.One(r.SortedNames())
+		resourceType, err = choose.One(r.SortedNames(), header)
 		if errors.Is(err, fzf.ErrAbort) {
 			return "", nil
 		}

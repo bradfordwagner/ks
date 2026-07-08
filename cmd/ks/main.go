@@ -7,6 +7,7 @@ import (
 	"github.com/bradfordwagner/go-util/log"
 	"github.com/bradfordwagner/ks/internal/args"
 	"github.com/bradfordwagner/ks/internal/choose"
+	"github.com/bradfordwagner/ks/internal/kube"
 	"github.com/koki-develop/go-fzf"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -71,6 +72,8 @@ var rootCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		flag_helper.Load(&standardArgs)
+
 		// map command names to commands
 		nameToCommand := make(map[string]*cobra.Command)
 		var names []string
@@ -81,7 +84,7 @@ var rootCmd = &cobra.Command{
 
 		for {
 			// choose a command
-			selectedCommand, err := choose.One(names)
+			selectedCommand, err := choose.One(names, kube.CurrentContext(standardArgs.Kubeconfig))
 			if errors.Is(fzf.ErrAbort, err) {
 				return nil
 			} else if err != nil {

@@ -1,6 +1,8 @@
 package kube
 
 import (
+	"path/filepath"
+
 	"github.com/bradfordwagner/go-util/log"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -53,6 +55,16 @@ func config(kubeconfig string) (config *rest.Config, err error) {
 	}
 
 	return
+}
+
+// CurrentContext returns the current-context name from kubeconfig, falling back to the
+// base filename if the file can't be read or has no current-context set.
+func CurrentContext(kubeconfig string) string {
+	load, err := clientcmd.LoadFromFile(kubeconfig)
+	if err != nil || load.CurrentContext == "" {
+		return filepath.Base(kubeconfig)
+	}
+	return load.CurrentContext
 }
 
 func SetNamespace(kubeconfig, namespace string) (err error) {

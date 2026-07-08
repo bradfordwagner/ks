@@ -6,6 +6,7 @@ import (
 	"github.com/bradfordwagner/go-util/log"
 	"github.com/bradfordwagner/ks/internal/args"
 	"github.com/bradfordwagner/ks/internal/choose"
+	"github.com/bradfordwagner/ks/internal/kube"
 	"github.com/bradfordwagner/ks/internal/link"
 	"github.com/bradfordwagner/ks/internal/list"
 	"github.com/koki-develop/go-fzf"
@@ -22,7 +23,7 @@ func Link(a args.Standard) (err error) {
 	}
 
 	// choose a kubeconfig
-	one, err := choose.One(configs)
+	one, err := choose.One(configs, kube.CurrentContext(a.Kubeconfig))
 	if errors.Is(fzf.ErrAbort, err) {
 		return nil
 	} else if err != nil {

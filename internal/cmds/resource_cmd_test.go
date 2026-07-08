@@ -38,13 +38,13 @@ var _ = Describe("resolveResourceType", func() {
 		})
 
 		It("returns the env var value without fzf", func() {
-			result, err := resolveResourceType(r)
+			result, err := resolveResourceType(r, "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result).To(Equal("deployments"))
 		})
 
 		It("populates the pane cache via Upsert", func() {
-			_, err := resolveResourceType(r)
+			_, err := resolveResourceType(r, "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(r.Get()).To(Equal("deployments"))
 		})
@@ -63,7 +63,7 @@ var _ = Describe("resolveResourceType", func() {
 		})
 
 		It("returns the cached resource without fzf", func() {
-			result, err := resolveResourceType(r)
+			result, err := resolveResourceType(r, "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result).To(Equal("services"))
 		})

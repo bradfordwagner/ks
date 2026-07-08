@@ -37,7 +37,7 @@ func KubeNewNamespace(a args.Standard) (err error) {
 	}
 
 	// select a namespace
-	namespace, err := choose.One(namespaces)
+	namespace, err := choose.One(namespaces, kube.CurrentContext(a.Kubeconfig))
 	if errors.Is(fzf.ErrAbort, err) {
 		return nil
 	} else if err != nil {
