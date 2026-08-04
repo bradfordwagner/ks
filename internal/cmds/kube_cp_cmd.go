@@ -9,7 +9,6 @@ import (
 	"github.com/bradfordwagner/ks/internal/kube"
 	"github.com/bradfordwagner/ks/internal/list"
 	"github.com/bradfordwagner/ks/internal/tmux"
-	"github.com/koki-develop/go-fzf"
 )
 
 func KubeCopy(a args.Standard) (err error) {
@@ -24,7 +23,7 @@ func KubeCopy(a args.Standard) (err error) {
 
 	// choose a kubeconfig
 	kubeconfig, err := choose.One(configs, kube.CurrentContext(a.Kubeconfig))
-	if errors.Is(fzf.ErrAbort, err) {
+	if errors.Is(choose.ErrAbort, err) {
 		return nil
 	} else if err != nil {
 		l.With("error", err).Error("error choosing kubeconfig")

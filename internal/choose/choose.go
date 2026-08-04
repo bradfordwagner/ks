@@ -1,38 +1,132 @@
 package choose
 
 import (
+	"bufio"
+	"bytes"
+	"errors"
 	"fmt"
-	"github.com/koki-develop/go-fzf"
-	"log"
+	"os"
+	"os/exec"
 	"strings"
 )
 
-// catppuccinMochaBlue is the "Blue" accent color from the Catppuccin Mocha palette,
-// used to highlight the context indicator in picker prompts.
+// ErrAbort is returned when the picker is dismissed (Esc / Ctrl-C / Ctrl-D) or
+// nothing matches. Callers treat it as a no-op.
+var ErrAbort = errors.New("choose: aborted")
+
+// catppuccinMochaBlue is the "Blue" accent from Catppuccin Mocha, used to color
+// the context indicator in the picker prompt.
 const catppuccinMochaBlue = "#89b4fa"
 
-func One(opts []string, header string) (res string, err error) {
-	choices, err := choose(opts, fzf.WithLimit(1), fzf.WithPrompt(prompt(header)), promptStyle())
-	if err != nil {
-		return
-	} else if len(choices) > 1 {
-		err = fmt.Errorf("expected 1 selection, got %s", strings.Join(choices, ", "))
-		return
-	}
-	res = choices[0]
+// multiHeader is shown above the list for multi-select pickers as a key hint.
+const multiHeader = "tab: select · enter: confirm"
 
-	return
+// One shows a single-select picker and returns the chosen value. It forces
+// single-select even when the user's FZF_DEFAULT_OPTS enables multi (`-m`).
+func One(opts []string, header string) (string, error) {
+	sel, err := run(strings.NewReader(joinLines(opts)), false, header)
+	if err != nil {
+		return "", err
+	}
+	if len(sel) == 0 {
+		return "", ErrAbort
+	}
+	return sel[0], nil
 }
 
-func Multi(opts []string, header string) (res []string, err error) {
-	return choose(opts,
-		fzf.WithNoLimit(true),
-		fzf.WithPrompt(prompt(header)),
-		promptStyle(),
-		fzf.WithKeyMap(fzf.KeyMap{
-			Toggle: []string{"tab", "ctrl+s"},
-		}),
-	)
+// Multi shows a multi-select picker and returns the chosen values.
+func Multi(opts []string, header string) ([]string, error) {
+	return run(strings.NewReader(joinLines(opts)), true, header)
+}
+
+// MultiStream shows a multi-select picker whose candidates are streamed from names
+// as they arrive; fzf reads its input incrementally. Inside tmux this renders in a
+// popup (see fzfArgs). The caller closes names when done. The writer keeps draining
+// names after fzf exits (e.g. the user aborts) so producers never block.
+func MultiStream(names <-chan string, header string) ([]string, error) {
+	cmd := exec.Command("fzf", fzfArgs(true, header)...)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, err
+	}
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+
+	go func() {
+		w := bufio.NewWriter(stdin)
+		broken := false
+		for name := range names {
+			if broken {
+				continue // fzf is gone; keep draining so the producer never blocks
+			}
+			if _, werr := w.WriteString(name + "\n"); werr != nil {
+				broken = true
+				continue
+			}
+			if werr := w.Flush(); werr != nil {
+				broken = true
+			}
+		}
+		_ = stdin.Close()
+	}()
+
+	if err := cmd.Wait(); err != nil {
+		return nil, classify(err)
+	}
+	return splitLines(out.String()), nil
+}
+
+// run pipes opts into fzf and returns the selected lines.
+func run(stdin *strings.Reader, multi bool, header string) ([]string, error) {
+	cmd := exec.Command("fzf", fzfArgs(multi, header)...)
+	cmd.Stdin = stdin
+	cmd.Stderr = os.Stderr
+	var out bytes.Buffer
+	cmd.Stdout = &out
+
+	if err := cmd.Run(); err != nil {
+		return nil, classify(err)
+	}
+	return splitLines(out.String()), nil
+}
+
+// fzfArgs builds the fzf flags. FZF_DEFAULT_OPTS is inherited automatically; these
+// flags take precedence, so `--no-multi` overrides a default `-m` for One(). Inside
+// tmux the picker renders in a centered popup (`--tmux`), which tmux composites into
+// its own screen region — sidestepping the full-screen alt-screen redraw corruption
+// some terminals show, especially for incremental (streaming) updates.
+func fzfArgs(multi bool, header string) []string {
+	args := []string{
+		"--prompt", prompt(header),
+		"--color", "prompt:" + catppuccinMochaBlue,
+	}
+	if os.Getenv("TMUX") != "" {
+		args = append(args, "--tmux", "center,80%,80%")
+	}
+	if multi {
+		args = append(args, "--multi", "--header", multiHeader)
+	} else {
+		args = append(args, "--no-multi")
+	}
+	return args
+}
+
+// classify maps fzf's exit codes to errors: 1 (no match) and 130 (interrupt) are
+// treated as an abort; anything else is a real error.
+func classify(err error) error {
+	var exit *exec.ExitError
+	if errors.As(err, &exit) {
+		switch exit.ExitCode() {
+		case 1, 130:
+			return ErrAbort
+		}
+	}
+	return err
 }
 
 // prompt formats a picker header as a "[<header>] > " prompt prefix.
@@ -40,26 +134,19 @@ func prompt(header string) string {
 	return fmt.Sprintf("[%s] > ", header)
 }
 
-// promptStyle colors the picker prompt in Catppuccin Mocha blue.
-func promptStyle() fzf.Option {
-	return fzf.WithStyles(fzf.WithStylePrompt(fzf.Style{ForegroundColor: catppuccinMochaBlue}))
+// joinLines renders options as newline-terminated fzf input ("" when empty).
+func joinLines(opts []string) string {
+	if len(opts) == 0 {
+		return ""
+	}
+	return strings.Join(opts, "\n") + "\n"
 }
 
-func choose(opts []string, fzfOpts ...fzf.Option) (res []string, err error) {
-	f, err := fzf.New(fzfOpts...)
-	if err != nil {
-		log.Fatal(err)
+// splitLines splits fzf's output into selected values, dropping the trailing newline.
+func splitLines(s string) []string {
+	s = strings.TrimRight(s, "\n")
+	if s == "" {
+		return nil
 	}
-
-	idxs, err := f.Find(opts, func(i int) string { return opts[i] })
-	if err != nil {
-		return
-	}
-
-	// convert index to value
-	for _, idx := range idxs {
-		res = append(res, opts[idx])
-	}
-
-	return
+	return strings.Split(s, "\n")
 }

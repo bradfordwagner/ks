@@ -8,7 +8,6 @@ import (
 	"github.com/bradfordwagner/ks/internal/args"
 	"github.com/bradfordwagner/ks/internal/choose"
 	"github.com/bradfordwagner/ks/internal/kube"
-	"github.com/koki-develop/go-fzf"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"os"
@@ -21,6 +20,8 @@ func init() {
 	commands = []*cobra.Command{
 		resourceCmd,
 		resourceAllCmd,
+		resourceLiveCmd,
+		resourceExistsCmd,
 		setNamespaceCmd,
 		tmuxMultiCmd,
 		tmuxWindowCmd,
@@ -85,7 +86,7 @@ var rootCmd = &cobra.Command{
 		for {
 			// choose a command
 			selectedCommand, err := choose.One(names, kube.CurrentContext(standardArgs.Kubeconfig))
-			if errors.Is(fzf.ErrAbort, err) {
+			if errors.Is(choose.ErrAbort, err) {
 				return nil
 			} else if err != nil {
 				return err

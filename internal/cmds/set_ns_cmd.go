@@ -7,7 +7,6 @@ import (
 	"github.com/bradfordwagner/ks/internal/args"
 	"github.com/bradfordwagner/ks/internal/choose"
 	"github.com/bradfordwagner/ks/internal/kube"
-	"github.com/koki-develop/go-fzf"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -32,7 +31,7 @@ func SetNamespace(a args.Standard) (err error) {
 
 	// choose a namespace
 	selectedNamespace, err := choose.One(namespaces, kube.CurrentContext(a.Kubeconfig))
-	if errors.Is(fzf.ErrAbort, err) {
+	if errors.Is(choose.ErrAbort, err) {
 		return nil
 	} else if err != nil {
 		return err
