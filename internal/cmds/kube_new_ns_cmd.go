@@ -9,7 +9,6 @@ import (
 	"github.com/bradfordwagner/ks/internal/choose"
 	"github.com/bradfordwagner/ks/internal/kube"
 	"github.com/bradfordwagner/ks/internal/tmux"
-	"github.com/koki-develop/go-fzf"
 	"io"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
@@ -38,7 +37,7 @@ func KubeNewNamespace(a args.Standard) (err error) {
 
 	// select a namespace
 	namespace, err := choose.One(namespaces, kube.CurrentContext(a.Kubeconfig))
-	if errors.Is(fzf.ErrAbort, err) {
+	if errors.Is(choose.ErrAbort, err) {
 		return nil
 	} else if err != nil {
 		return

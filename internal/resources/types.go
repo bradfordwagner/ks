@@ -12,13 +12,19 @@ const (
 	Perms       = 0644 // rw-r--r--
 	schemaV1    = 1
 	schemaV2    = 2
-	CurrentVersion = schemaV2
+	schemaV3    = 3
+	CurrentVersion = schemaV3
 )
 
 // ResourceEntry holds a Kubernetes resource name and its selection vote count.
+// Populated/Probed are set by resource_load's usage probe: Probed is true when
+// the type was successfully checked for objects, and Populated is true when it
+// had at least one object (cluster-wide) at that time.
 type ResourceEntry struct {
-	Name  string `json:"name"`
-	Votes int    `json:"votes"`
+	Name      string `json:"name"`
+	Votes     int    `json:"votes"`
+	Populated bool   `json:"populated,omitempty"`
+	Probed    bool   `json:"probed,omitempty"`
 }
 
 // Resources is a struct that contains a list of resource names

@@ -54,9 +54,11 @@ Flags are populated from env vars via `flag_helper.Load` at command runtime (not
 
 | Command | What it does |
 |---------|-------------|
-| `resource` | fzf-pick a k8s resource type → launch k9s at that view; skips fzf if pane already has a cached resource |
+| `resource` | fzf **multi-select** resource types → launch k9s. A single pick opens in the current pane; multiple picks open the first in the current pane and one tiled split pane per remaining selection (each sharing the current `KUBECONFIG`). Skips fzf and opens directly if the pane already has a cached resource or `KS_RESOURCE` is set |
 | `resource_all` | same as `resource` but passes `-A` (all namespaces) to k9s |
-| `resource_load` | calls the cluster's discovery API, writes resource names to `~/.ks/resources.json`; **must run before `resource`** |
+| `resource_live` | live-scan the cluster (parallel `Limit:1` existence checks, all namespaces, bounded by `--timeout`) and multi-select only resource types that **currently have objects**; results **stream into the fzf popup live** as the scan finds them, with previously-populated + voted types probed (and thus surfaced) first. Updates votes/pane-cache in `resources.json` on selection (like `resource`) but does **not** refresh the stored `populated` flags. `-A`/`--all` watches selections across all namespaces |
+| `resource_exists` | instant counterpart to `resource_live`: multi-select from resource types recorded as `populated` at the last `resources_load` (reads the cached flag, **no live cluster calls**). `-A`/`--all` watches selections across all namespaces |
+| `resource_load` | calls the cluster's discovery API, writes resource names to `~/.ks/resources.json`; **must run before `resource`**. CRD / non-standard-group resources are stored group-qualified (`randomsecrets.redhatcop.redhat.io`) so the picker can be filtered by typing the group (e.g. `redhatcop`); core and standard k8s groups (`apps`, `batch`, `autoscaling`, `extensions`, `policy`, `*.k8s.io`) keep their short plural. Also probes each listable type for existence (all namespaces, in parallel) and records a `populated` flag used by `resource_live` |
 | `resource_leaderboard` | tabular view of resource usage counts; `--all` includes zero-vote entries |
 | `set_ns` | fzf-pick a namespace → mutates the kubeconfig's current-context namespace |
 | `tmux_multi` | multi-select kubeconfigs → split one tmux pane per selection, each with `KUBECONFIG` set |
@@ -75,7 +77,7 @@ Flags are populated from env vars via `flag_helper.Load` at command runtime (not
 | Package | Role |
 |---------|------|
 | `internal/args` | Shared flag struct: `Dir`, `DataDir`, `Kubeconfig`, `Timeout` |
-| `internal/choose` | fzf wrapper — `One()` (single pick) and `Multi()` (multi-select) |
+| `internal/choose` | wraps the **`fzf` binary** (shelled out, so it inherits the user's `FZF_DEFAULT_OPTS` and key binds): `One()` (single pick, forces `--no-multi`), `Multi()` (multi-select), `MultiStream()` (multi-select fed from a channel, options appear live). Inside tmux the picker renders in a centered `--tmux` popup (tmux owns the popup's screen region, so incremental/streaming redraws render cleanly). `choose.ErrAbort` is returned on Esc/Ctrl-C or no match |
 | `internal/cmds` | Business logic for each command |
 | `internal/kube` | k8s clientset init, kubeconfig loading, namespace setting |
 | `internal/k9s` | Launches k9s TUI (headless-capable) |
@@ -87,13 +89,13 @@ Flags are populated from env vars via `flag_helper.Load` at command runtime (not
 
 ### Resource Cache (`internal/resources`)
 
-`~/.ks/resources.json` (v2 schema) stores two things:
-- `names`: `[]ResourceEntry{Name, Votes}` — every known k8s resource type with selection counts
+`~/.ks/resources.json` (v3 schema) stores two things:
+- `names`: `[]ResourceEntry{Name, Votes, Populated, Probed}` — every known k8s resource type with selection counts. `Probed` is true when `resource_load` successfully checked the type for objects; `Populated` is true when it had ≥1 object (cluster-wide) at that time. Both are used to prioritize the `resource_live` picker
 - `cache`: nested map `$TMUX → $TMUX_PANE → resource-name` — the last resource selected per pane
 
 On `resource` invocation: if the current pane already has a cached resource it skips fzf, increments that resource's vote, and writes the file asynchronously (`go r.Write(...)`) so k9s starts without waiting.
 
-`resource_load` preserves existing votes when refreshing — it merges discovery results with the existing file. The file migrates automatically from v1 (flat `[]string` names) to v2 (`[]ResourceEntry`) on first load.
+`resource_load` preserves existing votes when refreshing — it merges discovery results with the existing file. The file migrates automatically from v1 (flat `[]string` names) to v2 (`[]ResourceEntry`) to v3 (adds `Populated`/`Probed`) on load; the added fields are additive, so older files load with them defaulting to false. CRD names are stored group-qualified (`<plural>.<group>`); when a CRD's stored name changes from its old bare form to the qualified form, `resource_load` carries its votes over (looked up by qualified name, then by bare name).
 
 ### Tmux Integration Pattern
 

@@ -8,7 +8,6 @@ import (
 	"github.com/bradfordwagner/ks/internal/kube"
 	"github.com/bradfordwagner/ks/internal/list"
 	"github.com/bradfordwagner/ks/internal/tmux"
-	"github.com/koki-develop/go-fzf"
 )
 
 func TmuxWindow(a args.Standard) (err error) {
@@ -21,7 +20,7 @@ func TmuxWindow(a args.Standard) (err error) {
 	}
 
 	one, err := choose.One(configs, kube.CurrentContext(a.Kubeconfig))
-	if errors.Is(err, fzf.ErrAbort) {
+	if errors.Is(err, choose.ErrAbort) {
 		return nil
 	} else if err != nil {
 		l.With("error", err).Error("error choosing kubeconfig")
